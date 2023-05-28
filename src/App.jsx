@@ -1,15 +1,27 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { getFirestore, collection, getDocs, getDoc } from "firebase/firestore";
 
 const App = () => {
+    const [joinID, setJoinID] = useState("");
     const [initScreen, setinitScreen] = useState(true);
     const [localStream, setLocalStream] = useState();
     const [isCameraOpen, setIsCameraOpen] = useState(false);
 
+    // Getting the join ID
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+    });
+    useEffect(() => {
+        if (params.join) {
+            setJoinID(params.join);
+        }
+    }, [params]);
+
+    //  Firebase init
     const firebaseConfig = {
         apiKey: import.meta.env.VITE_API_KEY,
         authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -21,7 +33,7 @@ const App = () => {
     };
 
     const fbApp = initializeApp(firebaseConfig);
-    const firestore = getFirestore(fbApp);
+    const db = getFirestore(fbApp);
     const servers = {
         iceServers: [
             {
@@ -80,6 +92,55 @@ const App = () => {
         setIsCameraOpen(false);
     };
 
+    const createRoom = async () => {
+        const callDoc = await getDocs(collection(db, "calls"));
+        // const offerCandidates = collection(callDoc, "offerCandidates");
+
+        // const answerCandidates = callDoc.collection("answerCandidates");
+
+        setJoinID(callDoc.id);
+
+        // Get candidates for caller, save to db
+        pc.onicecandidate = (event) => {
+            console.log(event);
+            event.candidate && offerCandidates.add(event.candidate.toJSON());
+        };
+
+        // Create offer
+        const offerDescription = await pc.createOffer();
+        await pc.setLocalDescription(offerDescription);
+
+        const offer = {
+            sdp: offerDescription.sdp,
+            type: offerDescription.type,
+        };
+
+        await callDoc.set({ offer });
+
+        // Listen for remote answer
+        callDoc.onSnapshot((snapshot) => {
+            const data = snapshot.data();
+            if (!pc.currentRemoteDescription && data?.answer) {
+                const answerDescription = new RTCSessionDescription(
+                    data.answer
+                );
+                pc.setRemoteDescription(answerDescription);
+            }
+        });
+
+        // When answered, add candidate to peer connection
+        answerCandidates.onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const candidate = new RTCIceCandidate(change.doc.data());
+                    pc.addIceCandidate(candidate);
+                }
+            });
+        });
+
+        // hangupButton.disabled = false;
+    };
+
     return (
         <main className="mx-auto max-w-[450px] h-screen px-4 py-4 overflow-hidden">
             <div
@@ -87,15 +148,33 @@ const App = () => {
                 className="h-full w-full bg-slate-800 rounded-3xl overflow-hidden relative"
             >
                 {initScreen && (
-                    <div className="h-full w-full flex flex-col gap-4 items-center justify-center relative">
-                        {!isCameraOpen ? (
-                            <Button variant="secondary" onClick={startCamera}>
+                    <div className="h-full w-full flex flex-col gap-8 items-center justify-center relative">
+                        {isCameraOpen ? (
+                            <Button
+                                variant="secondary"
+                                className="w-full max-w-[200px]"
+                                onClick={startCamera}
+                            >
                                 Start Camera
                             </Button>
                         ) : (
-                            <Button variant="secondary" onClick={stopCamera}>
-                                Stop Camera
-                            </Button>
+                            <>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full max-w-[200px]"
+                                    onClick={stopCamera}
+                                >
+                                    Stop Camera
+                                </Button>
+                                <div className="flex flex-col gap-4 w-full items-center">
+                                    <Button
+                                        className="w-full max-w-[200px]"
+                                        onClick={createRoom}
+                                    >
+                                        Create Call
+                                    </Button>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
