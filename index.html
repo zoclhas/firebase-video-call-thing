@@ -1,13 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/main.js"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Firebase Video Call</title>
+    </head>
+    <body>
+        <main
+            class="w-full h-screen bg-slate-950 overflow-hidden flex justify-center items-center p-4"
+        >
+            <div
+                id="view"
+                class="w-full h-full max-w-[400px] bg-slate-900 rounded-3xl overflow-hidden relative"
+            >
+                <div
+                    class="flex flex-col gap-8 items-center justify-center h-full"
+                >
+                    <div class="flex gap-4">
+                        <button
+                            id="webcamButton"
+                            class="text-center px-3 py-2 bg-gray-700 hover:bg-emerald-900 disabled:hover:bg-gray-700 disabled:text-gray-400 transition-colors duration-300 ease rounded-lg text-white"
+                        >
+                            Start Video
+                        </button>
+                        <button
+                            id="webcamButtonStop"
+                            disabled
+                            class="text-center px-3 py-2 bg-gray-700 hover:bg-emerald-900 disabled:hover:bg-gray-700 disabled:text-gray-400 transition-colors duration-300 ease rounded-lg text-white"
+                        >
+                            Stop Video
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-1 items-center">
+                        <button
+                            id="callButton"
+                            class="text-center px-3 py-2 bg-gray-700 hover:bg-cyan-900 disabled:hover:bg-gray-700 disabled:text-gray-400 transition-colors duration-300 ease rounded-lg text-white"
+                            disabled
+                        >
+                            Create Call
+                        </button>
+                        <span class="text-white">
+                            ID:
+                            <a class="underline cursor-pointer"
+                                ><strong id="joinLink"></strong
+                            ></a>
+                        </span>
+                    </div>
+
+                    <div class="flex gap-1 items-center">
+                        <input
+                            id="callInput"
+                            class="block w-full px-3 py-2 bg-gray-700 border-gray-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500 rounded-lg grow"
+                        />
+                        <button
+                            id="answerButton"
+                            class="text-center px-3 py-2 bg-gray-700 hover:bg-cyan-900 disabled:hover:bg-gray-700 disabled:text-gray-400 transition-colors duration-300 ease rounded-lg text-white"
+                            disabled
+                        >
+                            Join
+                        </button>
+                    </div>
+                </div>
+
+                <video
+                    id="webcamVideo"
+                    autoplay
+                    playsinline
+                    muted
+                    class="aspect-[9/16] max-w-[90px] w-full bg-slate-600 rounded-2xl absolute bottom-4 right-4 z-40 shadow-lg object-cover object-center"
+                ></video>
+
+                <div>
+                    <video
+                        id="remoteVideo"
+                        autoplay
+                        playsinline
+                        data-expanded="false"
+                        class="z-30 object-cover object-center transition-all duration-300 ease-in absolute bottom-4 left-4 bg-gray-500"
+                    ></video>
+
+                    <div
+                        id="expandIcon"
+                        class="z-30 object-cover object-center transition-all duration-300 ease-in absolute bottom-4 left-4 bg-gray-400 w-8 h-8 rounded-full shadow-md hidden justify-center items-center cursor-pointer"
+                    >
+                        <svg
+                            id="expandIcon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 16 16"
+                            width="16"
+                            height="16"
+                        >
+                            <path
+                                d="M10.75 0h4.5c.415 0 .75.335.75.75v4.5a.751.751 0 0 1-1.281.531L13.5 4.562l-2.719 2.719a.747.747 0 0 1-1.06 0l-1-1a.747.747 0 0 1 0-1.06l2.719-2.719-1.222-1.221A.751.751 0 0 1 10.75 0zm-5.5 16H.75a.749.749 0 0 1-.75-.75v-4.5a.751.751 0 0 1 1.281-.531L2.5 11.438l2.719-2.719a.747.747 0 0 1 1.06 0l1 1a.747.747 0 0 1 0 1.06L4.56 13.498l1.219 1.219a.751.751 0 0 1-.531 1.281z"
+                                fill="white"
+                            />
+                        </svg>
+                    </div>
+
+                    <div
+                        id="shrinkIcon"
+                        class="z-30 object-cover object-center transition-all duration-300 ease-in absolute bottom-4 left-4 bg-gray-400 w-8 h-8 rounded-full shadow-md hidden justify-center items-center cursor-pointer"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 16 16"
+                            width="16"
+                            height="16"
+                        >
+                            <path
+                                d="M13.719.219a.746.746 0 0 1 1.059 0l1 1a.746.746 0 0 1 0 1.059l-2.719 2.719 1.219 1.219a.752.752 0 0 1-.531 1.282H9.25a.748.748 0 0 1-.75-.75V2.25a.75.75 0 0 1 1.282-.531l1.219 1.219L13.72.219zM2.25 8.5h4.5c.416 0 .75.334.75.75v4.5a.75.75 0 0 1-1.282.531l-1.219-1.219-2.719 2.719a.746.746 0 0 1-1.059 0l-1.002-1a.746.746 0 0 1 0-1.059l2.719-2.719-1.219-1.222c-.216-.216-.278-.537-.163-.819s.391-.462.694-.462z"
+                                fill="#fff"
+                            />
+                        </svg>
+                    </div>
+
+                    <div
+                        id="hangupButton"
+                        class="z-30 object-cover object-center transition-all duration-300 ease-in absolute bottom-4 left-14 bg-red-900 w-8 h-8 rounded-full shadow-md hidden justify-center items-center cursor-pointer"
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="m14.493 2.337-1.602 1.609 1.603 1.608a.592.592 0 0 1 .173.418.589.589 0 0 1-1.005.419L12.059 4.78l-1.603 1.609a.602.602 0 0 1-.833 0 .591.591 0 0 1 0-.837l1.603-1.608-1.603-1.609a.591.591 0 0 1 0-.836.602.602 0 0 1 .833 0l1.603 1.609 1.603-1.609a.602.602 0 0 1 .833 0 .59.59 0 0 1 .173.418.589.589 0 0 1-.173.418Zm-3.7 7.66c.305-.177.649-.375 1.084-.283.393.083 1.737 1.173 2.103 1.55.241.247.375.503.397.758.035 1.002-1.325 2.145-1.573 2.288a1.908 1.908 0 0 1-1.142.357c-.439 0-.929-.125-1.463-.374C7.3 13.082 2.871 8.74 1.7 5.861c-.485-1.071-.489-1.954-.008-2.618.192-.311 1.287-1.613 2.265-1.572.26.023.514.156.762.399.375.368 1.437 1.715 1.52 2.109.09.439-.109.789-.285 1.095-.037.065-.088.143-.143.228-.212.325-.495.76-.395 1.037.713 1.753 2.363 3.283 4.117 4.002.272.099.704-.185 1.028-.397.085-.055.161-.106.227-.143l.007-.005Z"
+                                fill="#fff"
+                            />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script type="module" src="/main.js"></script>
+    </body>
 </html>

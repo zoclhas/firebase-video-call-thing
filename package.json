@@ -1,14 +1,20 @@
 {
-  "name": "firebase-video-call-thing",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --port 3000",
-    "build": "vite build",
-    "preview": "vite preview --port 3003"
-  },
-  "devDependencies": {
-    "vite": "^4.3.2"
-  }
+    "name": "firebase-video-call-thing",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --port 3000",
+        "build": "vite build",
+        "preview": "vite preview --port 3003"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.14",
+        "postcss": "^8.4.24",
+        "tailwindcss": "^3.3.2",
+        "vite": "^4.3.2"
+    },
+    "dependencies": {
+        "firebase": "^9.22.1"
+    }
 }
